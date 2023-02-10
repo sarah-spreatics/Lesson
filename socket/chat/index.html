@@ -1,0 +1,146 @@
+<html>
+  <head>
+    <title>socket.io</title>
+    <script
+      src="https://cdn.socket.io/4.5.4/socket.io.min.js"
+      integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      .container {
+        width: 500px;
+        height: 600px;
+        padding: 20px;
+        background-color: lightblue;
+        overflow-y: auto;
+      }
+      .notice {
+        text-align: center;
+      }
+      .container div div {
+        display: inline-block;
+        padding: 10px;
+      }
+      .container div {
+        margin-bottom: 10px;
+      }
+      .my-chat {
+        text-align: right;
+      }
+      .my-chat div {
+        background-color: yellow;
+      }
+      .other-chat {
+        text-align: left;
+      }
+      .other-chat div {
+        background-color: white;
+      }
+      .my-dm {
+        text-align: right;
+      }
+      .dm div {
+        background-color: lightpink;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="notice">공지 메세지</div>
+      <div class="my-chat">
+        <div>내가 보낸 메세지</div>
+      </div>
+      <div class="other-chat">
+        <div>남이 보낸 메세지</div>
+      </div>
+      <div class="dm my-dm">
+        <div>(속닥속닥) 내가 보낸 디엠</div>
+      </div>
+      <div class="dm">
+        <div>(속닥속닥) 남이 보낸 디엠</div>
+      </div>
+    </div>
+    <select id="members">
+      <option value="전체">전체</option>
+    </select>
+    <input type="text" id="msg_box" onkeydown="enter()" />
+    <button onclick="btnSend()">전송</button>
+    <script>
+      const username = prompt("닉네임을 입력해주세요.");
+
+      const socket = io.connect();
+
+      socket.on("connect", () => {
+        console.log("server connected");
+
+        // 닉네임 보내기
+        socket.emit("username", username);
+      });
+
+      let id = "";
+      socket.on("id", (data) => {
+        id = data;
+      });
+
+      // 안내 메세지 받기
+      socket.on("notice", (msg) => {
+        const container = document.querySelector(".container");
+        const div = document.createElement("div");
+        div.classList.add("notice");
+        div.textContent = msg;
+        container.appendChild(div);
+      });
+
+      // 채팅방 목록 받기
+      socket.on("list", (list) => {
+        const select = document.getElementById("members");
+        // select box내 모든 자식 요소 지우기
+        while (select.firstChild) select.removeChild(select.lastChild);
+        // 전체 옵션 추가
+        const option = document.createElement("option");
+        option.text = "전체";
+        option.value = "전체";
+        select.appendChild(option);
+        // 멤버 추가
+        for (let [key, value] of Object.entries(list)) {
+          const option = document.createElement("option");
+          option.text = value;
+          option.value = value;
+          select.appendChild(option);
+        }
+      });
+
+      socket.on("newMSG", (data) => {
+        // data = {msg: ~~~~, to : ~~~, id : ~~~, username : ~~~, is_dm : ~~~}
+        const container = document.querySelector(".container");
+        const outer_div = document.createElement("div");
+        const div = document.createElement("div");
+        div.textContent = data.username + " : " + data.msg;
+
+        if (data.id == id) {
+          if (data.is_dm) outer_div.classList.add("dm", "my-dm");
+          else outer_div.classList.add("my-chat");
+        } else {
+          if (data.is_dm) outer_div.classList.add("dm");
+          else outer_div.classList.add("other-chat");
+        }
+        outer_div.appendChild(div);
+        container.appendChild(outer_div);
+      });
+
+      // 전송 버튼 기능
+      const btnSend = () => {
+        const input = document.getElementById("msg_box");
+        const to = document.getElementById("members");
+        socket.emit("send", { msg: input.value, to: to.value });
+        input.value = "";
+      };
+
+      const enter = () => {
+        if (event.keyCode == 13) {
+          btnSend();
+        }
+      };
+    </script>
+  </body>
+</html>
