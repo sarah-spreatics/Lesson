@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>socket</title>
+    <!-- socket.io cdn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"></script>
+  </head>
+  <body>
+    <h2>socket.io 사용하기</h2>
+    <script>
+      // 클라이언트 소켓 생성 후 연결
+      let socket = io.connect();
+
+      socket.on("connect", () => {
+        console.log("server connected");
+      });
+
+      socket.on("welcome", (json) => {
+        console.log("data", json["msg"]);
+        json = { name: "client", msg: "Hello World!" };
+        socket.emit("hello", json);
+      });
+    </script>
+  </body>
+</html>

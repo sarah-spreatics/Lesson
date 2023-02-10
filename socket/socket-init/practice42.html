@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>practice42</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"></script>
+  </head>
+  <body>
+    <h2>Hello World!</h2>
+    <button onclick="btnSend('hello')">hello</button>
+    <button onClick="btnSend('study')">study</button>
+    <button onClick="btnSend('bye')">bye</button>
+
+    <script>
+      let socket = io.connect();
+
+      const onHello = () => {
+        socket.emit("hello_e", "hello");
+      };
+
+      const onStudy = () => {
+        socket.emit("study_e", "study");
+      };
+
+      const onBye = () => {
+        socket.emit("bye_e", "bye");
+      };
+
+      const btnSend = (msg) => {
+        socket.emit("send", msg);
+      };
+
+      socket.on("response", (msg) => {
+        console.log(msg);
+      });
+    </script>
+  </body>
+</html>
